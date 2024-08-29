@@ -5,19 +5,17 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const app = express();
-app.use(cors()); // Habilita o CORS para todas as origens
+app.use(cors()); 
 const PORT = 3000;
 
 const db = new sqlite3.Database("banco-de-dados.db");
 
-// Criar a tabela 'tarefas' no banco de dados
 db.serialize(() => {
   db.run(
     "CREATE TABLE IF NOT EXISTS tarefas (id INTEGER PRIMARY KEY, tarefa TEXT)"
   );
 });
 
-// Criar a tabela 'usuarios' no banco de dados
 db.serialize(() => {
   db.run(
     "CREATE TABLE IF NOT EXISTS usuarios (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT, role TEXT)"
@@ -26,7 +24,6 @@ db.serialize(() => {
 
 app.use(express.json());
 
-// Middleware para verificar e decodificar o token JWT
 const verificarToken = (req, res, next) => {
   const token = req.headers["authorization"];
   if (!token) {
@@ -42,10 +39,8 @@ const verificarToken = (req, res, next) => {
   });
 };
 
-// Rota para adicionar uma nova tarefa
 app.post("/tarefas", verificarToken, (req, res) => {
   const { tarefa } = req.body;
-  // Inserir a nova tarefa no banco de dados
   db.run("INSERT INTO tarefas (tarefa) VALUES (?)", [tarefa], function (err) {
     if (err) {
       return res.status(500).json({ error: err.message });
@@ -54,9 +49,7 @@ app.post("/tarefas", verificarToken, (req, res) => {
   });
 });
 
-// Rota para obter todas as tarefas
 app.get("/tarefas", verificarToken, (req, res) => {
-  // Obter todas as tarefas do banco de dados
   db.all("SELECT * FROM tarefas", [], (err, rows) => {
     if (err) {
       return res.status(500).json({ error: err.message });
@@ -65,10 +58,8 @@ app.get("/tarefas", verificarToken, (req, res) => {
   });
 });
 
-// Rota para obter uma tarefa específica
 app.get("/tarefas/:id", verificarToken, (req, res) => {
   const { id } = req.params;
-  // Obter a tarefa pelo ID
   db.get("SELECT * FROM tarefas WHERE id = ?", [id], (err, row) => {
     if (err) {
       return res.status(500).json({ error: err.message });
@@ -81,11 +72,9 @@ app.get("/tarefas/:id", verificarToken, (req, res) => {
   });
 });
 
-// Rota para editar uma tarefa existente
 app.put("/tarefas/:id", verificarToken, (req, res) => {
   const { id } = req.params;
   const { tarefa } = req.body;
-  // Atualizar a tarefa com base no ID
   db.run(
     "UPDATE tarefas SET tarefa = ? WHERE id = ?",
     [tarefa, id],
@@ -102,10 +91,8 @@ app.put("/tarefas/:id", verificarToken, (req, res) => {
   );
 });
 
-// Rota para excluir uma tarefa
 app.delete("/tarefas/:id", verificarToken, (req, res) => {
   const { id } = req.params;
-  // Excluir a tarefa com base no ID
   db.run("DELETE FROM tarefas WHERE id = ?", [id], function (err) {
     if (err) {
       return res.status(500).json({ error: err.message });
@@ -118,7 +105,6 @@ app.delete("/tarefas/:id", verificarToken, (req, res) => {
   });
 });
 
-// Rota para registrar um novo usuário
 app.post("/registro", async (req, res) => {
   const { username, password, role } = req.body;
   try {
@@ -135,7 +121,6 @@ app.post("/registro", async (req, res) => {
   }
 });
 
-// Rota para autenticar o usuário e gerar token JWT
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -159,7 +144,6 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Função para buscar usuário no banco de dados
 const buscarUsuario = (username) => {
   return new Promise((resolve, reject) => {
     db.get(
@@ -175,7 +159,6 @@ const buscarUsuario = (username) => {
   });
 };
 
-// Função para criar um novo usuário no banco de dados
 const criarUsuario = (username, password, role) => {
   return new Promise((resolve, reject) => {
     db.run(
@@ -191,7 +174,6 @@ const criarUsuario = (username, password, role) => {
   });
 };
 
-// Inicie o servidor Express
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta http://localhost:${PORT}`);
 });
